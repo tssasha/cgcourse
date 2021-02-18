@@ -24,7 +24,7 @@ Image::Image(int a_width, int a_height, int a_channels)
   {
     width = a_width;
     height = a_height;
-    size = a_width * a_height * a_channels;`
+    size = a_width * a_height * a_channels;
     channels = a_channels;
     self_allocated = true;
   }
