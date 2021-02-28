@@ -1,12 +1,13 @@
 #include "common.h"
 #include "Image.h"
 #include "Player.h"
+#include "Map.h"
 
 #define GLFW_DLL
 
 #include <GLFW/glfw3.h>
 
-constexpr GLsizei WINDOW_WIDTH = 2048, WINDOW_HEIGHT = 1024;
+constexpr GLsizei WINDOW_WIDTH = 700, WINDOW_HEIGHT = 550, MAP_WIDTH = 47, MAP_HEIGHT = 33;
 
 struct InputState {
     bool keys[1024]{}; //массив состояний кнопок - нажата/не нажата
@@ -103,6 +104,11 @@ int initGL() {
     return 0;
 }
 
+void drawTexture(Texture texture) {
+    glWindowPos2i(texture.x_pos, texture.y_pos);
+    glDrawPixels(texture.img->Width(), texture.img->Height(), GL_RGBA, GL_UNSIGNED_BYTE, texture.img->Data()); GL_CHECK_ERRORS;
+}
+
 int main(int argc, char **argv) {
     if (!glfwInit())
         return -1;
@@ -111,6 +117,7 @@ int main(int argc, char **argv) {
 //	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 //	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
+    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, 1);
 
     GLFWwindow *window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "task1 base project", nullptr, nullptr);
     if (window == nullptr) {
@@ -134,37 +141,52 @@ int main(int argc, char **argv) {
     while (gl_error != GL_NO_ERROR)
         gl_error = glGetError();
 
-    Point starting_pos{.x = WINDOW_WIDTH / 2, .y = WINDOW_HEIGHT / 2};
-    Image img("resources/tex.png");
-    printf("%d, %d\n", img.Width(), img.Height());
-    Player player{&img, starting_pos};
-
     Image screenBuffer(WINDOW_WIDTH, WINDOW_HEIGHT, 4);
+    Map *dungeon = new Map(MAP_WIDTH, MAP_HEIGHT, "../resources/map");
+    Point starting_pos = dungeon->MapCoordToPoint(dungeon->Start());
+    Player player(starting_pos, dungeon);
+    Image img("../resources/end2.png");
 
-    glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-    GL_CHECK_ERRORS;
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    GL_CHECK_ERRORS;
-    Texture texture = player.TextureData();
+    glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT); GL_CHECK_ERRORS;
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); GL_CHECK_ERRORS;
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GREATER, 0.5);
 
     //game loop
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(window) && !dungeon->Done()) {
         GLfloat currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
         glfwPollEvents();
 
         processPlayerMovement(player);
-        //player.Draw(img);
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        GL_CHECK_ERRORS;
-        glRasterPos2i(0, 0);
-        GL_CHECK_ERRORS;
-        //glDrawPixels(WINDOW_WIDTH, WINDOW_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, screenBuffer.Data());
-        GL_CHECK_ERRORS;
-        glDrawPixels(texture.width, texture.height, GL_RGBA, GL_UNSIGNED_BYTE, texture.data);
-        GL_CHECK_ERRORS;
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); GL_CHECK_ERRORS;
+
+        glWindowPos2i(0, 0);
+        glDrawPixels(WINDOW_WIDTH, WINDOW_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, screenBuffer.Data()); GL_CHECK_ERRORS;
+        glWindowPos2i(0, 0);
+        glDrawPixels(MAP_WIDTH * 16, MAP_HEIGHT * 16, GL_RGBA, GL_UNSIGNED_BYTE, dungeon->Data()); GL_CHECK_ERRORS;
+        drawTexture(player.TextureData());
+
+        glfwSwapBuffers(window);
+    }
+
+    while (!glfwWindowShouldClose(window)) {
+        GLfloat currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+        glfwPollEvents();
+        dungeon->Img().FadeOut();
+        //printf("%d\n", dungeon->Data()[0].a);
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); GL_CHECK_ERRORS;
+
+        glWindowPos2i(0, 0);
+        glDrawPixels(WINDOW_WIDTH, WINDOW_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, screenBuffer.Data()); GL_CHECK_ERRORS;
+        //glDrawPixels(MAP_WIDTH * 16, MAP_HEIGHT * 16, GL_RGBA, GL_UNSIGNED_BYTE, dungeon->Data()); GL_CHECK_ERRORS;
+        glWindowPos2i(50, -25);
+        glDrawPixels(img.Width(), img.Height(), GL_RGBA, GL_UNSIGNED_BYTE, img.Data()); GL_CHECK_ERRORS;
 
         glfwSwapBuffers(window);
     }

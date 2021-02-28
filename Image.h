@@ -13,13 +13,14 @@ struct Pixel
   uint8_t a;
 };
 
-constexpr Pixel backgroundColor{0, 0, 0, 0};
+constexpr Pixel backgroundColor{7, 29, 41, 255};
 
 struct Image
 {
   explicit Image(const std::string &a_path);
   Image(int a_width, int a_height, int a_channels);
 
+  void PasteImg(Image *img, int width, int x, int y);
   int Save(const std::string &a_path);
 
   int Width()    const { return width; }
@@ -27,9 +28,7 @@ struct Image
   int Channels() const { return channels; }
   size_t Size()  const { return size; }
   Pixel* Data()        { return  data; }
-
-  Pixel GetPixel(int x, int y) { return data[width * y + x];}
-  void  PutPixel(int x, int y, const Pixel &pix) { data[width* y + x] = pix; }
+  void FadeOut();
 
   ~Image();
 
@@ -44,12 +43,9 @@ private:
 
 struct Texture
 {
-  Image *sprite;
+  Image *img;
   int x_pos;
   int y_pos;
-  Pixel *data = sprite->Data();
-  int width = sprite->Width();
-  int height = sprite->Height();
 };
 
 
