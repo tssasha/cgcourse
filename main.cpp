@@ -178,7 +178,7 @@ int main(int argc, char **argv) {
     heart.doublesize();
     int lvlCount = 3;
     std::string lvlstr[3] = {"../resources/lvl1.png", "../resources/lvl1.png", "../resources/lvl1.png"};
-    std::string dungeonstr[3] = {"../resources/map.png", "../resources/map.png", "../resources/map.png"};
+    std::string dungeonstr[3] = {"../resources/map", "../resources/map", "../resources/map"};
 
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT); GL_CHECK_ERRORS;
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); GL_CHECK_ERRORS;
