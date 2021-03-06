@@ -7,7 +7,7 @@
 
 #include <GLFW/glfw3.h>
 
-constexpr GLsizei WINDOW_WIDTH = 700, WINDOW_HEIGHT = 550, MAP_WIDTH = 47, MAP_HEIGHT = 33;
+constexpr GLsizei WINDOW_WIDTH = 800, WINDOW_HEIGHT = 550, MAP_WIDTH = 50, MAP_HEIGHT = 33;
 
 struct InputState {
     bool keys[1024]{}; //массив состояний кнопок - нажата/не нажата
@@ -134,7 +134,7 @@ void ChangeImg(int n, Image *screenBuffer, Image *img, Image *dungeon, Texture p
         glWindowPos2i(0, 0);
         glDrawPixels(MAP_WIDTH * 16, MAP_HEIGHT * 16, GL_RGBA, GL_UNSIGNED_BYTE, dungeon->Data()); GL_CHECK_ERRORS;
         drawTexture(player);
-        glWindowPos2i(0, 0);
+        glWindowPos2i(50, 0);
         glDrawPixels(img->Width(), img->Height(), GL_RGBA, GL_UNSIGNED_BYTE, img->Data()); GL_CHECK_ERRORS;
 
         glfwSwapBuffers(window);
@@ -170,13 +170,14 @@ int main(int argc, char **argv) {
     Map *dungeon = nullptr;
     Player *player = nullptr;
     Image *img;
+    int dcounter = 0;
 //    Image coin("../resources/dungeon_V.1.0.0_nyknck/Gold/G001/G001_01.png") ;
 //    Image heart("../resources/heart.png") ;
 //    coin.doublesize();
 //    heart.doublesize();
     int lvlCount = 3;
     std::string lvlstr[3] = {"../resources/lvl1.png", "../resources/lvl2.png", "../resources/lvl3.png"};
-    std::string dungeonstr[3] = {"../resources/map", "../resources/map", "../resources/map"};
+    std::string dungeonstr[3] = {"../resources/map1", "../resources/map2", "../resources/map3"};
 
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT); GL_CHECK_ERRORS;
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f); GL_CHECK_ERRORS;
@@ -201,13 +202,19 @@ int main(int argc, char **argv) {
         dungeon->Img()->FadeOut(254);
         player->TextureData().img->FadeOut(254);
         ChangeImg(1, &screenBuffer, img, dungeon->Img(), player->TextureData(), window);
-        while (!glfwWindowShouldClose(window) && !dungeon->Win() && !dungeon->Death()) {
+        while (!glfwWindowShouldClose(window) && !dungeon->Win() && (!dungeon->Death() || dcounter < 40)) {
             GLfloat currentFrame = glfwGetTime();
             deltaTime = currentFrame - lastFrame;
             lastFrame = currentFrame;
             glfwPollEvents();
 
-            processPlayerMovement(*player);
+            if (dungeon->Death()) {
+                player->DeathAnimation(dcounter / 10);
+                ++dcounter;
+            }
+            else {
+                processPlayerMovement(*player);
+            }
 
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             GL_CHECK_ERRORS;
@@ -234,6 +241,9 @@ int main(int argc, char **argv) {
             return 0;
         }
         if (dungeon->Death()) {
+            for (int j = 0; j < 40; ++j) {
+                player->DeathAnimation(j / 10);
+            }
             img = new Image("../resources/death.png");
             img->FadeOut(254);
             ChangeImg(0, &screenBuffer, img, dungeon->Img(), player->TextureData(), window);
