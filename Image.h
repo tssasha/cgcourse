@@ -2,6 +2,7 @@
 #define MAIN_IMAGE_H
 
 #include <string>
+#include "structs.h"
 
 constexpr int tileSize = 16;
 
@@ -20,7 +21,8 @@ struct Image
   explicit Image(const std::string &a_path);
   Image(int a_width, int a_height, int a_channels);
 
-  void PasteImg(Image *img, int width, int x, int y);
+  void PasteImg(Image *img, int width, int x, int y, int tr);
+  void doublesize();
   int Save(const std::string &a_path);
 
   int Width()    const { return width; }
@@ -28,7 +30,9 @@ struct Image
   int Channels() const { return channels; }
   size_t Size()  const { return size; }
   Pixel* Data()        { return  data; }
-  void FadeOut();
+  void FadeOut(double coef);
+  void Display(double coef);
+  void Redraw(Point point, int tr);
 
   ~Image();
 
@@ -43,7 +47,7 @@ private:
 
 struct Texture
 {
-  Image *img;
+  Image *img = nullptr;
   int x_pos;
   int y_pos;
 };

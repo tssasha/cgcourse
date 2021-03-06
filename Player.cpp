@@ -8,7 +8,7 @@ bool Player::Moved() const
     return true;
 }
 
-void Player::ProcessInput(MovementDir dir)
+void Player::ProcessInput(MovementDir dir, int n)
 {
   int move_dist = move_speed * 1;
   switch(dir)
@@ -17,29 +17,33 @@ void Player::ProcessInput(MovementDir dir)
       old_coords.y = coords.y;
       coords.y += move_dist;
       coords = map->Movement(coords, old_coords, dir);
-      img_cur = img_up;
+      img_cur = img_up[n];
       break;
     case MovementDir::DOWN:
       old_coords.y = coords.y;
       coords.y -= move_dist;
       coords = map->Movement(coords, old_coords, dir);
-      img_cur = img_down;
+      img_cur = img_down[n];
       break;
     case MovementDir::LEFT:
       old_coords.x = coords.x;
       coords.x -= move_dist;
       coords = map->Movement(coords, old_coords, dir);
-      img_cur = img_left;
+      img_cur = img_left[n];
       break;
     case MovementDir::RIGHT:
       old_coords.x = coords.x;
       coords.x += move_dist;
       coords = map->Movement(coords, old_coords, dir);
-      img_cur = img_right;
+      img_cur = img_right[n];
       break;
     default:
       break;
   }
+}
+
+void Player::DeathAnimation(int n) {
+        img_cur = img_death[n];
 }
 
 Texture Player::TextureData()

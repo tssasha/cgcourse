@@ -5,21 +5,21 @@
 #include "stb_image_write.h"
 #include <iostream>
 
-Pixel *doublesize(Pixel *data, int *width, int *height) {
+void Image::doublesize() {
     Pixel *data1;
-    int size = *width * *height * 4;
+    int size = width * height * 4;
     data1 = new Pixel[size];
-    for (int i = 0; i < *width; ++i) {
-        for (int j = 0; j < *height; ++j) {
-            data1[*height * 4 * i + 2 * j] = data[*height * i + j];
-            data1[*height * 4 * i + 2 * j + 1] = data[*height * i + j];
-            data1[*height * 2 * (i * 2 + 1) + 2 * j] = data[*height * i + j];
-            data1[*height * 2 * (i * 2 + 1) + 2 * j + 1] = data[*height * i + j];
+    for (int i = 0; i < width; ++i) {
+        for (int j = 0; j < height; ++j) {
+            data1[height * 4 * i + 2 * j] = data[height * i + j];
+            data1[height * 4 * i + 2 * j + 1] = data[height * i + j];
+            data1[height * 2 * (i * 2 + 1) + 2 * j] = data[height * i + j];
+            data1[height * 2 * (i * 2 + 1) + 2 * j + 1] = data[height * i + j];
         }
     }
-    *width *= 2;
-    *height *= 2;
-    return data1;
+    width *= 2;
+    height *= 2;
+    data = data1;
 }
 
 Image::Image(const std::string &a_path) {
@@ -45,11 +45,17 @@ Image::Image(int a_width, int a_height, int a_channels) {
     }
 }
 
-void Image::PasteImg(Image *img, int width, int x, int y) {
+void Image::PasteImg(Image *img, int width, int x, int y, int tr) {
     if (img) {
         for (int i1 = 0; i1 < img->Height(); ++i1) {
             for (int j1 = 0; j1 < img->Width(); ++j1) {
-                data[width * x + y + width * i1 + j1] = img->Data()[img->Width() * i1 + j1];
+                Pixel newPixel = img->Data()[img->Width() * i1 + j1], oldPixel = data[width * x + y + width * i1 + j1];
+                newPixel.r = newPixel.a / 255.0 * (newPixel.r - oldPixel.r) + oldPixel.r;
+                newPixel.g = newPixel.a / 255.0 * (newPixel.g - oldPixel.g) + oldPixel.g;
+                newPixel.b = newPixel.a / 255.0 * (newPixel.b - oldPixel.b) + oldPixel.b;
+                //newPixel.a = 255;
+                data[width * x + y + width * i1 + j1] = newPixel;
+                data[width * x + y + width * i1 + j1].a = tr;
             }
         }
     }
@@ -73,10 +79,25 @@ int Image::Save(const std::string &a_path) {
     return 0;
 }
 
-void Image::FadeOut() {
+void Image::Redraw(Point point, int tr) {
+    for (int i = point.y; i < point.y + tileSize; ++i) {
+        for (int j = point.x; j < point.x + tileSize; ++j) {
+            data[i * width + j].a = tr;
+        }
+    }
+}
+
+void Image::FadeOut(double coef) {
     for (int i = 0; i < size; ++i) {
-        data[i].a = data[i].a > 0 ? data[i].a - 1 : 0;
-        //printf("%d\n", data[i].a);
+        data[i].a = data[i].a - coef > 0 ? data[i].a - coef : 0;
+    }
+};
+
+void Image::Display(double coef) {
+    for (int i = 0; i < size; ++i) {
+        if (data[i].a) {
+            data[i].a = data[i].a + coef < 255 ? data[i].a + coef : 255;
+        }
     }
 };
 
