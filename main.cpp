@@ -110,9 +110,9 @@ void drawTexture(Texture texture) {
     glDrawPixels(texture.img->Width(), texture.img->Height(), GL_RGBA, GL_UNSIGNED_BYTE, texture.img->Data()); GL_CHECK_ERRORS;
 }
 
-void ChangeImg(int n, Image screenBuffer, Image *img, Image *dungeon, Texture player, GLFWwindow *window) {
+void ChangeImg(int n, Image *screenBuffer, Image *img, Image *dungeon, Texture player, GLFWwindow *window) {
     FrameCounter = 0;
-    while (!glfwWindowShouldClose(window) && FrameCounter < 60) {
+    while (!glfwWindowShouldClose(window) && FrameCounter < 120) {
         GLfloat currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
@@ -120,12 +120,8 @@ void ChangeImg(int n, Image screenBuffer, Image *img, Image *dungeon, Texture pl
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); GL_CHECK_ERRORS;
 
         if (!n) {
-            if (player.img) {
-                player.img->FadeOut(5);
-            }
-            if (dungeon) {
-                dungeon->FadeOut(5);
-            }
+            player.img->FadeOut(5);
+            dungeon->FadeOut(5);
             img->Display(5);
         }
         else {
@@ -134,9 +130,11 @@ void ChangeImg(int n, Image screenBuffer, Image *img, Image *dungeon, Texture pl
             img->FadeOut(5);
         }
         glWindowPos2i(0, 0);
-        glDrawPixels(WINDOW_WIDTH, WINDOW_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, screenBuffer.Data()); GL_CHECK_ERRORS;
+        glDrawPixels(WINDOW_WIDTH, WINDOW_HEIGHT, GL_RGBA, GL_UNSIGNED_BYTE, screenBuffer->Data()); GL_CHECK_ERRORS;
+        glWindowPos2i(0, 0);
         glDrawPixels(MAP_WIDTH * 16, MAP_HEIGHT * 16, GL_RGBA, GL_UNSIGNED_BYTE, dungeon->Data()); GL_CHECK_ERRORS;
         drawTexture(player);
+        glWindowPos2i(0, 0);
         glDrawPixels(img->Width(), img->Height(), GL_RGBA, GL_UNSIGNED_BYTE, img->Data()); GL_CHECK_ERRORS;
 
         glfwSwapBuffers(window);
@@ -172,12 +170,12 @@ int main(int argc, char **argv) {
     Map *dungeon = nullptr;
     Player *player = nullptr;
     Image *img;
-    Image coin("../resources/dungeon_V.1.0.0_nyknck/Gold/G001/G001_01.png") ;
-    Image heart("../resources/heart.png") ;
-    coin.doublesize();
-    heart.doublesize();
+//    Image coin("../resources/dungeon_V.1.0.0_nyknck/Gold/G001/G001_01.png") ;
+//    Image heart("../resources/heart.png") ;
+//    coin.doublesize();
+//    heart.doublesize();
     int lvlCount = 3;
-    std::string lvlstr[3] = {"../resources/lvl1.png", "../resources/lvl1.png", "../resources/lvl1.png"};
+    std::string lvlstr[3] = {"../resources/lvl1.png", "../resources/lvl2.png", "../resources/lvl3.png"};
     std::string dungeonstr[3] = {"../resources/map", "../resources/map", "../resources/map"};
 
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT); GL_CHECK_ERRORS;
@@ -185,23 +183,24 @@ int main(int argc, char **argv) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    dungeon = new Map(MAP_WIDTH, MAP_HEIGHT, dungeonstr[0]);
+    Point starting_pos = dungeon->MapCoordToPoint(dungeon->Start());
+    player = new Player(starting_pos, dungeon);
+    img = new Image(lvlstr[0]);
+
     //game loop
     for (int i = 0; i < lvlCount; ++i){
         if (i) {
             img = new Image(lvlstr[i]);
             img->FadeOut(254);
-            ChangeImg(0, screenBuffer, dungeon->Img(), img, player->TextureData(), window);
+            ChangeImg(0, &screenBuffer, img, dungeon->Img(), player->TextureData(), window);
             dungeon = new Map(MAP_WIDTH, MAP_HEIGHT, dungeonstr[i]);
-            Point starting_pos = dungeon->MapCoordToPoint(dungeon->Start());
-            player = new Player(starting_pos, dungeon);
-            dungeon->Img()->FadeOut(254);
-            player->TextureData().img->FadeOut(254);
-            ChangeImg(1, screenBuffer, img, dungeon->Img(), player->TextureData(), window);
-        } else {
-            dungeon = new Map(MAP_WIDTH, MAP_HEIGHT, dungeonstr[i]);
-            Point starting_pos = dungeon->MapCoordToPoint(dungeon->Start());
+            starting_pos = dungeon->MapCoordToPoint(dungeon->Start());
             player = new Player(starting_pos, dungeon);
         }
+        dungeon->Img()->FadeOut(254);
+        player->TextureData().img->FadeOut(254);
+        ChangeImg(1, &screenBuffer, img, dungeon->Img(), player->TextureData(), window);
         while (!glfwWindowShouldClose(window) && !dungeon->Win() && !dungeon->Death()) {
             GLfloat currentFrame = glfwGetTime();
             deltaTime = currentFrame - lastFrame;
@@ -218,12 +217,12 @@ int main(int argc, char **argv) {
             GL_CHECK_ERRORS;
             glWindowPos2i(0, 0);
             glDrawPixels(MAP_WIDTH * 16, MAP_HEIGHT * 16, GL_RGBA, GL_UNSIGNED_BYTE, dungeon->Data());
-            GL_CHECK_ERRORS;
-            glDrawPixels(coin.Width(), coin.Height(), GL_RGBA, GL_UNSIGNED_BYTE, coin.Data());
-            GL_CHECK_ERRORS;
-            glWindowPos2i(64, 0);
-            glDrawPixels(heart.Width(), heart.Height(), GL_RGBA, GL_UNSIGNED_BYTE, heart.Data());
-            GL_CHECK_ERRORS;
+//            GL_CHECK_ERRORS;
+//            glDrawPixels(coin.Width(), coin.Height(), GL_RGBA, GL_UNSIGNED_BYTE, coin.Data());
+//            GL_CHECK_ERRORS;
+//            glWindowPos2i(64, 0);
+//            glDrawPixels(heart.Width(), heart.Height(), GL_RGBA, GL_UNSIGNED_BYTE, heart.Data());
+//            GL_CHECK_ERRORS;
             //glDrawPixels(health.Width(), health.Height(), GL_RGBA, GL_UNSIGNED_BYTE, health.Data()); GL_CHECK_ERRORS;
             drawTexture(player->TextureData());
 
@@ -236,13 +235,15 @@ int main(int argc, char **argv) {
         }
         if (dungeon->Death()) {
             img = new Image("../resources/death.png");
-            ChangeImg(0, screenBuffer, dungeon->Img(), img, player->TextureData(), window);
+            img->FadeOut(254);
+            ChangeImg(0, &screenBuffer, img, dungeon->Img(), player->TextureData(), window);
             break;
         }
     }
     if (dungeon->Win()) {
         img = new Image("../resources/win.png");
-        ChangeImg(0, screenBuffer, dungeon->Img(), img, player->TextureData(), window);
+        img->FadeOut(254);
+        ChangeImg(0, &screenBuffer, img, dungeon->Img(), player->TextureData(), window);
     }
     glfwTerminate();
     return 0;

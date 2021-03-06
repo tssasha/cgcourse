@@ -89,14 +89,14 @@ void Image::Redraw(Point point, int tr) {
 
 void Image::FadeOut(double coef) {
     for (int i = 0; i < size; ++i) {
-        data[i].a = data[i].a - coef > 0 ? data[i].a - coef : 0;
+        data[i].a = (data[i].a - coef) > 0 ? data[i].a - coef : 0;
     }
 };
 
 void Image::Display(double coef) {
     for (int i = 0; i < size; ++i) {
         if (data[i].a) {
-            data[i].a = data[i].a + coef < 255 ? data[i].a + coef : 255;
+            data[i].a = (data[i].a + coef) < 255 ? data[i].a + coef : 255;
         }
     }
 };
