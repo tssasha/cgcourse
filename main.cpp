@@ -187,15 +187,21 @@ int main(int argc, char **argv) {
 
     //game loop
     for (int i = 0; i < lvlCount; ++i){
-        img = new Image(lvlstr[i]);
-        img->FadeOut(254);
-        ChangeImg(0, screenBuffer, dungeon->Img(), img, player->TextureData(), window);
-        dungeon = new Map(MAP_WIDTH, MAP_HEIGHT, dungeonstr[i]);
-        Point starting_pos = dungeon->MapCoordToPoint(dungeon->Start());
-        player = new Player(starting_pos, dungeon);
-        dungeon->Img()->FadeOut(254);
-        player->TextureData().img->FadeOut(254);
-        ChangeImg(1, screenBuffer, img, dungeon->Img(), player->TextureData(), window);
+        if (i) {
+            img = new Image(lvlstr[i]);
+            img->FadeOut(254);
+            ChangeImg(0, screenBuffer, dungeon->Img(), img, player->TextureData(), window);
+            dungeon = new Map(MAP_WIDTH, MAP_HEIGHT, dungeonstr[i]);
+            Point starting_pos = dungeon->MapCoordToPoint(dungeon->Start());
+            player = new Player(starting_pos, dungeon);
+            dungeon->Img()->FadeOut(254);
+            player->TextureData().img->FadeOut(254);
+            ChangeImg(1, screenBuffer, img, dungeon->Img(), player->TextureData(), window);
+        } else {
+            dungeon = new Map(MAP_WIDTH, MAP_HEIGHT, dungeonstr[i]);
+            Point starting_pos = dungeon->MapCoordToPoint(dungeon->Start());
+            player = new Player(starting_pos, dungeon);
+        }
         while (!glfwWindowShouldClose(window) && !dungeon->Win() && !dungeon->Death()) {
             GLfloat currentFrame = glfwGetTime();
             deltaTime = currentFrame - lastFrame;
